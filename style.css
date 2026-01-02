@@ -67,6 +67,7 @@ body {
     cursor: grab;
     font-weight: bold;
     font-size: 1.2rem;
+    touch-action: none;
 }
 
 .dragging { opacity: 0.5; }
