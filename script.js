@@ -115,6 +115,69 @@ function generateOptions(correctAnswer) {
             card.classList.remove('dragging');
         });
 
+        // Arrastre táctil (tablets/phones)
+        card.addEventListener('pointerdown', (e) => {
+            if (e.pointerType !== 'touch' && e.pointerType !== 'pen') {
+                return;
+            }
+
+            e.preventDefault();
+            const dropZone = document.getElementById('drop-answer');
+            const originalStyles = {
+                position: card.style.position,
+                left: card.style.left,
+                top: card.style.top,
+                zIndex: card.style.zIndex,
+                transform: card.style.transform
+            };
+            const rect = card.getBoundingClientRect();
+
+            card.classList.add('dragging');
+            card.style.position = 'fixed';
+            card.style.left = `${rect.left}px`;
+            card.style.top = `${rect.top}px`;
+            card.style.zIndex = '1000';
+
+            const offsetX = e.clientX - rect.left;
+            const offsetY = e.clientY - rect.top;
+
+            const moveCard = (moveEvent) => {
+                card.style.left = `${moveEvent.clientX - offsetX}px`;
+                card.style.top = `${moveEvent.clientY - offsetY}px`;
+            };
+
+            const endDrag = (endEvent) => {
+                card.classList.remove('dragging');
+                card.style.position = originalStyles.position;
+                card.style.left = originalStyles.left;
+                card.style.top = originalStyles.top;
+                card.style.zIndex = originalStyles.zIndex;
+                card.style.transform = originalStyles.transform;
+                card.releasePointerCapture(endEvent.pointerId);
+
+                const dropRect = dropZone.getBoundingClientRect();
+                const isInside =
+                    endEvent.clientX >= dropRect.left &&
+                    endEvent.clientX <= dropRect.right &&
+                    endEvent.clientY >= dropRect.top &&
+                    endEvent.clientY <= dropRect.bottom;
+
+                if (isInside) {
+                    dropZone.innerText = val;
+                    checkAnswer(val);
+                }
+
+                card.removeEventListener('pointermove', moveCard);
+                card.removeEventListener('pointerup', endDrag);
+                card.removeEventListener('pointercancel', endDrag);
+            };
+
+            card.setPointerCapture(e.pointerId);
+            card.addEventListener('pointermove', moveCard);
+            card.addEventListener('pointerup', endDrag);
+            card.addEventListener('pointercancel', endDrag);
+        });
+
         container.appendChild(card);
     });
 }
